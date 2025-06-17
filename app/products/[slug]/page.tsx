@@ -9,20 +9,20 @@ import ProductCard from '@/components/products/product-card';
 import { featuredProducts, newArrivals, bestSellers } from '@/data/products';
 import { useApp } from '@/providers/AppContext';
 
-interface CategoryPageProps {
+interface SectionPageProps {
   params: {
     slug: string;
   };
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
+export default function CategoryPage({ params }: SectionPageProps) {
   const { slug } = params;
   console.log(slug);
-  const { handleCategoryChange } = useApp();
+  const { handleViewAll } = useApp();
 
   // Set the category when page loads
   useEffect(() => {
-    handleCategoryChange(slug);
+    handleViewAll(slug);
   }, [slug]);
   
   const { products,nextCursor, fetchMoreProducts, isLoading } = useApp();
@@ -32,12 +32,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
   
-  // Filter products by category
-  const categoryProducts = products.filter(
-    product => product.category.toLowerCase() === categoryName.toLowerCase()
-  );
-  
-  if (categoryProducts.length === 0) {
+  if (products.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">No Products Found</h1>
@@ -70,7 +65,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       
       {/* Products grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {categoryProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>

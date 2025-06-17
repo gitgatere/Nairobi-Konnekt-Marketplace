@@ -19,6 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { useApp } from '@/providers/AppContext';
 
 const categories = [
   { name: 'Electronics', href: '/category/electronics' },
@@ -34,6 +35,8 @@ const categories = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { items } = useCart();
+  const { searchTerm, handleSearchChange, handleSearchClick, handleKeyDown } = useApp();
+  
   
   useEffect(() => {
     const handleScroll = () => {
@@ -105,12 +108,16 @@ export default function Header() {
           {/* Search bar */}
           <div className="hidden md:flex flex-1 mx-6">
             <div className="relative w-full max-w-lg">
-              <Input 
+              <Input
+              value={searchTerm}
+          onChange={handleSearchChange}
+          onKeyDown={handleKeyDown} 
                 type="search" 
                 placeholder="Search products, brands, and categories..." 
                 className="w-full pl-4 pr-10 py-2 rounded-lg"
               />
-              <Button 
+              <Button
+              onClick={handleSearchClick} 
                 variant="ghost" 
                 size="icon" 
                 className="absolute right-1 top-1/2 -translate-y-1/2"
@@ -166,7 +173,10 @@ export default function Header() {
       {/* Search bar for mobile */}
       <div className="border-t md:hidden px-4 py-2">
         <div className="relative w-full">
-          <Input 
+          <Input
+          value={searchTerm}
+          onChange={handleSearchChange} 
+          onKeyDown={handleKeyDown}
             type="search" 
             placeholder="Search..." 
             className="w-full pl-4 pr-10 py-2 rounded-lg"

@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -7,8 +8,10 @@ import CategoryGrid from '@/components/home/category-grid';
 import { featuredProducts, newArrivals, bestSellers } from '@/data/products';
 import Hero from '@/components/home/hero';
 import BannerGrid from '@/components/home/banner-grid';
+import { useApp } from '@/providers/AppContext';
 
 export default function Home() {
+  const { overview } = useApp();
   return (
     <div className="flex flex-col gap-10 pb-10">
       {/* Hero section */}
@@ -31,13 +34,13 @@ export default function Home() {
       <section className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Featured Products</h2>
-          <Link href="/products">
-            <Button variant="link" className="flex items-center gap-1">
+          <Link href="/products/featured">
+            <Button variant="link" className="flex items-center gap-1" >
               View All <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
-        <ProductCarousel products={featuredProducts} />
+        <ProductCarousel products={overview?.featured || []} />
       </section>
 
       {/* Mid-page banner */}
@@ -74,12 +77,12 @@ export default function Home() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">New Arrivals</h2>
           <Link href="/products/new-arrivals">
-            <Button variant="link" className="flex items-center gap-1">
+            <Button variant="link" className="flex items-center gap-1" >
               View All <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
-        <ProductCarousel products={newArrivals} />
+        <ProductCarousel products={overview?.new_arrivals || []} />
       </section>
 
       {/* Best Sellers */}
@@ -87,12 +90,12 @@ export default function Home() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Best Sellers</h2>
           <Link href="/products/best-sellers">
-            <Button variant="link" className="flex items-center gap-1">
+            <Button variant="link" className="flex items-center gap-1" >
               View All <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
-        <ProductCarousel products={bestSellers} />
+        <ProductCarousel products={overview?.best_sellers || []} />
       </section>
 
       {/* Sell on marketplace section */}
@@ -126,3 +129,16 @@ export default function Home() {
     </div>
   );
 }
+
+// {/* All Products Section */}
+//       <section className="container mx-auto px-4">
+//         <div className="flex items-center justify-between mb-6">
+//           <h2 className="text-2xl font-bold">All Products</h2>
+//           <Link href="/products">
+//             <Button variant="link" className="flex items-center gap-1">
+//               View All <ChevronRight className="h-4 w-4" />
+//             </Button>
+//           </Link>
+//         </div>
+//         <ProductCarousel products={allProducts.slice(0, 10)} /> {/* Show first 10 */}
+//       </section>

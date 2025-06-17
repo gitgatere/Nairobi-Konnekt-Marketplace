@@ -6,43 +6,27 @@ import Image from 'next/image';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/product-card';
-import { featuredProducts, newArrivals, bestSellers } from '@/data/products';
 import { useApp } from '@/providers/AppContext';
 
-interface CategoryPageProps {
-  params: {
-    slug: string;
-  };
-}
 
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = params;
-  console.log(slug);
-  const { handleCategoryChange } = useApp();
+
+export default function CategoryPage() {
+  const { fetchProducts } = useApp();
 
   // Set the category when page loads
   useEffect(() => {
-    handleCategoryChange(slug);
-  }, [slug]);
+    fetchProducts();
+  }, []);
   
   const { products,nextCursor, fetchMoreProducts, isLoading } = useApp();
   
-  // Convert slug to readable format
-  const categoryName = slug.split('-').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
   
-  // Filter products by category
-  const categoryProducts = products.filter(
-    product => product.category.toLowerCase() === categoryName.toLowerCase()
-  );
-  
-  if (categoryProducts.length === 0) {
+  if (products.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">No Products Found</h1>
         <p className="text-muted-foreground mb-6">
-          We couldn't find any products in the {categoryName} category.
+          We couldn't find any products .
         </p>
         <Link href="/products">
           <Button>Browse All Products</Button>
@@ -57,20 +41,20 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-primary">Home</Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">{categoryName}</span>
+        <span className="text-foreground">All Products</span>
       </div>
       
       {/* Category header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{categoryName}</h1>
+        <h1 className="text-3xl font-bold mb-2">All Products</h1>
         <p className="text-muted-foreground">
-          Browse our selection of {categoryName.toLowerCase()} products
+          Browse all products
         </p>
       </div>
       
       {/* Products grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {categoryProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>

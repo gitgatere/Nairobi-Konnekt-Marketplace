@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { formatPrice, calculateDiscountPercentage } from '@/lib/utils';
-import { Product } from '@/data/products';
+import { Product } from '@/types/product'; // ✅ Correct import
 
 interface ProductCardProps {
   product: Product;
@@ -21,10 +21,12 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
     images,
     rating,
     reviewCount,
-    vendorName,
+    vendor,
     isNewArrival,
     isBestSeller,
   } = product;
+
+  const vendorName = vendor?.name || ''; // Get name from vendor object
   
   const discountPercentage = originalPrice ? calculateDiscountPercentage(originalPrice, price) : 0;
   

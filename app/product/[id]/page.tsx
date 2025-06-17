@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, Heart, ShoppingCart, Share2, Star, Truck, Shield, RotateCcw, Check, Minus, Plus } from 'lucide-react';
@@ -9,27 +9,86 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { featuredProducts, newArrivals, bestSellers } from '@/data/products';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';  // ✅ Correct path
 import { formatPrice, calculateDiscountPercentage } from '@/lib/utils';
 import { useCart } from '@/hooks/use-cart';
 import ProductCarousel from '@/components/products/product-carousel';
+import { Product } from "@/types/product";
+
+export interface ProductResponse {
+  product: Product;
+  related_products: Product[]; // Optional if you need them
+}
+
 
 export default function ProductPage({ params }: { params: { id: string } }) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  //const id = 1
   const { id } = params;
-  
-  // Find product from all available products
-  const allProducts = [...featuredProducts, ...newArrivals, ...bestSellers];
-  const product = allProducts.find((p) => p.id === id);
-  
+  const [data, setData] = useState<ProductResponse | null>(null);
+
+   // Safely destructure with defaults when data is loaded
+  const {                          // Required (but default for safety)
+  name = "",                       // Required
+  description = "",                // Required
+  price = 0,                       // Required
+  originalPrice = price,           // Optional: falls back to price
+  images = [],                     // Required (but default empty array)
+  // rating = null,                   // Optional (number | null)
+  reviewCount = 0,                 // Optional
+  vendorId = "",                   // Required (string)
+  vendor = {                       // Nested object with defaults
+    id: 0,
+    name: "Unknown Vendor"
+  },
+  category = "Uncategorized",      // Required
+  stock = 0,                       // Required
+  features = [],                   // Optional (Record<string, unknown>)
+  specifications = {},             // Optional
+} = data?.product || {};
+
   const { toast } = useToast();
   const { addItem } = useCart();
   
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(product?.images[0] || '');
+  const [selectedImage, setSelectedImage] = useState('');
+
+   const vendorName = vendor?.name ?? 'Unknown Vendor'; // Get name from vendor object
+   const rating = data?.product.rating ?? 0;
+  //  const features = data?.product.features ?? {};
+   //const specifications = data?.product.specifications ?? {};
+
+  // Fetch product
+const getProduct = async (productId: string) => {
+  try {
+    const response = await fetch(`${API_BASE}/products/${productId}`);
+    if (!response.ok) throw new Error("Failed to fetch product");
+    const data = await response.json();
+    const productData = {
+        product: data.product || {},
+        related_products: data.related_products || []
+      };
+      
+      setData(productData);
+      
+      // Set the initial selected image after data loads
+      if (productData.product?.images?.[0]) {
+        setSelectedImage(productData.product?.images[0]);
+      }
+  } catch (err) {
+    console.error("Product fetch error:", err);
+  }
+};
+
+useEffect(() => {
+  getProduct(id);
+}, [id, API_BASE]);
+  
   
   // Handle quantity change
   const increaseQuantity = () => {
-    if (quantity < (product?.stock || 10)) {
+    if (!data) return;
+    if (quantity < (data.product?.stock || 10)) {
       setQuantity(quantity + 1);
     }
   };
@@ -42,16 +101,17 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   
   // Add to cart
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!data) return;
+    if (!data.product) return;
     
     addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
+      id: id.toString(),
+      name: name,
+      price: price,
       quantity,
-      image: product.images[0],
-      vendorId: product.vendorId,
-      vendorName: product.vendorName,
+      image: images[0],
+      vendorId: vendorId,
+      vendorName: vendorName,
     });
   };
   
@@ -59,12 +119,12 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const handleAddToWishlist = () => {
     toast({
       title: 'Added to wishlist',
-      description: `${product?.name} has been added to your wishlist`,
+      description: `${name} has been added to your wishlist`,
     });
   };
   
   // If product not found
-  if (!product) {
+  if (!data?.product) {
     return (
       <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[60vh]">
         <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
@@ -76,12 +136,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     );
   }
   
-  const discountPercentage = product.originalPrice ? calculateDiscountPercentage(product.originalPrice, product.price) : 0;
+  const discountPercentage = originalPrice ? calculateDiscountPercentage(originalPrice, price) : 0;
   
   // Find related products (same category)
-  const relatedProducts = allProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 6);
+  const relatedProducts = data?.related_products
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -89,11 +147,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-primary">Home</Link>
         <ChevronRight className="h-4 w-4" />
-        <Link href={`/category/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-primary">
-          {product.category}
+        <Link href={`/category/${category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-primary">
+          {category}
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">{product.name}</span>
+        <span className="text-foreground">{name}</span>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
@@ -102,7 +160,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <div className="relative aspect-square rounded-lg overflow-hidden border">
             <Image
               src={selectedImage}
-              alt={product.name}
+              alt={name}
               fill
               className="object-cover"
             />
@@ -115,7 +173,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           </div>
           
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {product.images.map((image, index) => (
+            {images.map((image, index) => (
               <button
                 key={index}
                 className={`relative aspect-square w-20 rounded border overflow-hidden ${
@@ -125,7 +183,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               >
                 <Image
                   src={image}
-                  alt={`${product.name} - view ${index + 1}`}
+                  alt={`${name} - view ${index + 1}`}
                   fill
                   className="object-cover"
                 />
@@ -137,10 +195,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         {/* Product details */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">{name}</h1>
             
-            <Link href={`/vendor/${product.vendorId}`} className="text-primary hover:underline mb-4 inline-block">
-              {product.vendorName}
+            <Link href={`/vendor/${vendorId}`} className="text-primary hover:underline mb-4 inline-block">
+              {vendorName}
             </Link>
             
             <div className="flex items-center gap-2 mt-2">
@@ -149,42 +207,42 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.floor(product.rating)
+                      i < Math.floor(rating)
                         ? 'fill-amber-400 text-amber-400'
-                        : i < product.rating
+                        : i < rating
                         ? 'fill-amber-400 text-amber-400 half'
                         : 'text-gray-300'
                     }`}
                   />
                 ))}
               </div>
-              <span className="font-medium">{product.rating}</span>
-              <span className="text-muted-foreground">({product.reviewCount} reviews)</span>
+              <span className="font-medium">{rating}</span>
+              <span className="text-muted-foreground">({reviewCount} reviews)</span>
             </div>
           </div>
           
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
+            <span className="text-3xl font-bold">{formatPrice(price)}</span>
             
-            {product.originalPrice && (
+            {originalPrice && (
               <span className="text-lg text-muted-foreground line-through">
-                {formatPrice(product.originalPrice)}
+                {formatPrice(originalPrice)}
               </span>
             )}
             
             {discountPercentage > 0 && (
               <Badge variant="outline" className="text-red-500 border-red-200 ml-2">
-                Save {formatPrice(product.originalPrice! - product.price)}
+                Save {formatPrice(originalPrice! - price)}
               </Badge>
             )}
           </div>
           
           <div className="border-t pt-6">
-            <p className="text-muted-foreground mb-4">{product.description}</p>
+            <p className="text-muted-foreground mb-4">{description}</p>
             
-            {product.features && (
+            {features && (
               <ul className="space-y-2 mb-4">
-                {product.features.map((feature, index) => (
+                {features.map((feature, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
@@ -212,7 +270,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     variant="ghost" 
                     size="icon" 
                     onClick={increaseQuantity}
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= stock}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -222,10 +280,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Stock Status</p>
                 <div className="flex items-center gap-1">
-                  <Badge variant={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'destructive'}>
-                    {product.stock > 10 ? 'In Stock' : product.stock > 0 ? 'Low Stock' : 'Out of Stock'}
+                  <Badge variant={stock > 10 ? 'success' : stock > 0 ? 'warning' : 'destructive'}>
+                    {stock > 10 ? 'In Stock' : stock > 0 ? 'Low Stock' : 'Out of Stock'}
                   </Badge>
-                  {product.stock > 0 && <span className="text-sm">({product.stock} available)</span>}
+                  {stock > 0 && <span className="text-sm">({stock} available)</span>}
                 </div>
               </div>
             </div>
@@ -235,7 +293,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 size="lg" 
                 className="flex-1"
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={stock === 0}
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 Add to Cart
@@ -293,19 +351,19 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <TabsList className="w-full justify-start border-b rounded-none mb-6">
             <TabsTrigger value="description">Description</TabsTrigger>
             <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({product.reviewCount})</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
             <TabsTrigger value="shipping">Shipping & Returns</TabsTrigger>
           </TabsList>
           
           <TabsContent value="description" className="px-1">
             <div className="prose dark:prose-invert max-w-none">
-              <p className="mb-4">{product.description}</p>
+              <p className="mb-4">{description}</p>
               
-              {product.features && (
+              {features && (
                 <>
                   <h3 className="text-xl font-semibold mb-2">Key Features</h3>
                   <ul className="list-disc pl-5 space-y-1 mb-4">
-                    {product.features.map((feature, index) => (
+                    {features.map((feature, index) => (
                       <li key={index}>{feature}</li>
                     ))}
                   </ul>
@@ -313,18 +371,18 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               )}
               
               <p>
-                Experience the quality and uniqueness of products from {product.vendorName}, 
-                one of our trusted vendors specializing in {product.category.toLowerCase()} products on Nairobi-Konnekt Marketplace.
+                Experience the quality and uniqueness of products from {vendorName}, 
+                one of our trusted vendors specializing in {category.toLowerCase()} products on Nairobi-Konnekt Marketplace.
               </p>
             </div>
           </TabsContent>
           
           <TabsContent value="specifications">
-            {product.specifications ? (
+            {specifications ? (
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full">
                   <tbody>
-                    {Object.entries(product.specifications).map(([key, value], index) => (
+                    {Object.entries(specifications).map(([key, value], index) => (
                       <tr key={key} className={index % 2 === 0 ? 'bg-muted/50' : ''}>
                         <td className="py-3 px-4 font-medium">{key}</td>
                         <td className="py-3 px-4">{value}</td>
@@ -334,7 +392,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 </table>
               </div>
             ) : (
-              <p className="text-muted-foreground">No detailed specifications available for this product.</p>
+              <p className="text-muted-foreground">No detailed specifications available for this </p>
             )}
           </TabsContent>
           
@@ -342,8 +400,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">{product.rating} out of 5</p>
-                  <p className="text-muted-foreground">Based on {product.reviewCount} reviews</p>
+                  <p className="text-2xl font-bold">{rating} out of 5</p>
+                  <p className="text-muted-foreground">Based on {reviewCount} reviews</p>
                 </div>
                 <Button>Write a Review</Button>
               </div>

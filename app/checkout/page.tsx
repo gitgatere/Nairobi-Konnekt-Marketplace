@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCart } from '@/hooks/use-cart';
 import { formatPrice, generateOrderNumber } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';  // ✅ Correct path
 
 export default function CheckoutPage() {
   const { items, clearCart } = useCart();
