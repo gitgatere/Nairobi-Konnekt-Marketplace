@@ -11,6 +11,11 @@ import { CartProvider } from '@/providers/cart-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+    ],
+  },
   title: 'Nairobi-Konnekt Marketplace',
   description: 'A multi-vendor e-commerce platform connecting Kenyan sellers with global buyers',
 };

@@ -162,6 +162,8 @@ useEffect(() => {
               src={selectedImage}
               alt={name}
               fill
+              priority
+              
               className="object-cover"
             />
             
@@ -185,6 +187,8 @@ useEffect(() => {
                   src={image}
                   alt={`${name} - view ${index + 1}`}
                   fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover"
                 />
               </button>

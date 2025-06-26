@@ -51,6 +51,7 @@ export default function Home() {
               src="https://images.pexels.com/photos/7681731/pexels-photo-7681731.jpeg"
               alt="Shop local Kenyan businesses"
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
               priority
             />
@@ -121,6 +122,7 @@ export default function Home() {
               src="https://images.pexels.com/photos/6169659/pexels-photo-6169659.jpeg"
               alt="Become a seller"
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
             />
           </div>

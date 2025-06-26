@@ -47,6 +47,8 @@ export default function BannerGrid() {
               src={banner.image}
               alt={banner.title}
               fill
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-6 md:p-10">
