@@ -20,7 +20,6 @@ export interface ProductResponse {
   related_products: Product[]; // Optional if you need them
 }
 
-
 export default function ProductPage({ params }: { params: { id: string } }) {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   //const id = 1
