@@ -21,6 +21,7 @@ export interface ProductResponse {
 }
 
 // cooking with Aasane
+const name = "Aaasane"
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
